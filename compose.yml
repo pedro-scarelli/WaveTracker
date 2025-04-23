@@ -1,0 +1,24 @@
+services:
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #   depends_on:
+  #     - login-db
+
+  login-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: scarelli
+      POSTGRES_PASSWORD: neymardemoicano2011
+      POSTGRES_DB: db_login
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
