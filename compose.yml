@@ -1,16 +1,16 @@
 services:
-  # backend:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - NODE_ENV=development
-  #   depends_on:
-  #     - login-db
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=database
+    depends_on:
+      - database
 
-  login-db:
+  database:
     image: postgres:15
     environment:
       POSTGRES_USER: scarelli

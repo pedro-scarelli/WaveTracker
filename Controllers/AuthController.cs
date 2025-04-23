@@ -14,7 +14,7 @@ public class AuthController(AppDbContext context, JwtService jwt) : ControllerBa
     private readonly JwtService _jwt = jwt;
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto loginDto)
+    public async Task<IActionResult> Login(LoginDTO loginDto)
     {
         var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == loginDto.Email);
         if (user == null || !Verify(loginDto.Password, user.HashedPassword))
