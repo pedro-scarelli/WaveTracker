@@ -13,11 +13,12 @@ public class JwtService
     private readonly string _issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
                    ?? throw new InvalidOperationException("JWT Issuer must be provided");
 
-    public string GenerateToken(string email)
+    public string GenerateToken(string userId, string email)
     {
         var claims = new[]
         {
-            new Claim(ClaimTypes.Name, email)
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, email)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
