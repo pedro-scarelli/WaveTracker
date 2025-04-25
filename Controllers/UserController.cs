@@ -26,16 +26,91 @@ public class UserController(AppDbContext context) : ControllerBase
         return Created(string.Empty, new { id = user.Id });
     }
 
-    [HttpGet()]
+    [HttpGet("{uid}")]
     [Authorize]
-    public async Task<IActionResult> GetUser()
+    public async Task<IActionResult> GetUser(string uid)
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var user = await _context.Users.FindAsync(userId);
+        var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? throw new UnauthorizedAccessException();
+
+        IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
+        var user = await FindUserById(uid);
 
         return Ok(new
         {
             Data = new { User = user }
         });
+    }
+
+    [HttpGet()]
+    [Authorize]
+    public async Task<IActionResult> GetAllUser()
+    {
+        var users = await _context.Users.FindAsync();
+
+        return Ok(new
+        {
+            Data = new { Users = users }
+        });
+    }
+
+    [HttpDelete("{uid}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteUser(string uid)
+    {
+        var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? throw new UnauthorizedAccessException();
+
+        IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
+
+        var userToDelete = await FindUserById(uid);
+
+        userToDelete.DeletedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            Message = "User deleted"
+        });
+    }
+
+    [HttpPatch("{uid}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateUser(string uid, UpdateUserDTO updateUserDto)
+    {
+        var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? throw new UnauthorizedAccessException();
+
+        IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
+        var user = await FindUserById(uid);
+        if (updateUserDto.Name != null)
+        {
+            user.Name = updateUserDto.Name;
+        }
+
+        return Ok(new
+        {
+            Data = new { User = user }
+        });
+    }
+
+    private async Task<User> FindUserById(string uid)
+    {
+        var foundUser = await _context.Users.FindAsync(new Guid(uid));
+
+        if (foundUser != null)
+        {
+            return foundUser;
+        }
+
+        throw new KeyNotFoundException("User not found");
+    }
+
+    private static void IsTargetUserEqualsToTokenUser(string requestUserId, string targetUserId)
+    {
+        if (requestUserId != targetUserId)
+        {
+            throw new UnauthorizedAccessException();
+        }
     }
 }

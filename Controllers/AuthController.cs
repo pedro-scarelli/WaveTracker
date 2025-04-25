@@ -21,6 +21,7 @@ public class AuthController(AppDbContext context, JwtService jwt) : ControllerBa
             return Unauthorized();
 
         var token = _jwt.GenerateToken(user.Id.ToString(), user.Email);
+
         return Ok(new { Data = new { Token = token }, Message = "Login efetuado com sucesso" });
     }
 }
