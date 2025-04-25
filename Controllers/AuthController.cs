@@ -20,12 +20,7 @@ public class AuthController(AppDbContext context, JwtService jwt) : ControllerBa
         if (user == null || !Verify(loginDto.Password, user.HashedPassword))
             return Unauthorized();
 
-<<<<<<< Updated upstream
         var token = _jwt.GenerateToken(user.Id.ToString(), user.Email);
-        return Ok(new { Token = token });
-=======
-        var token = _jwt.GenerateToken(user.Email);
         return Ok(new { Data = new { Token = token }, Message = "Login efetuado com sucesso" });
->>>>>>> Stashed changes
     }
 }

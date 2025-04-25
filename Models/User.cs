@@ -8,11 +8,8 @@ using Microsoft.EntityFrameworkCore;
 [Table("tb_users")]
 public class User(string name, string email, string hashedPassword)
 {
-<<<<<<< Updated upstream
-=======
     [Key]
     [Column("pk_id_user", TypeName = "uuid")]
->>>>>>> Stashed changes
     public Guid Id { get; set; }
 
     [Column("st_name", TypeName = "varchar(100)")]
