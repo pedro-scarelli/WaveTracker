@@ -17,7 +17,10 @@ public class JwtService
     {
         var claims = new[]
         {
+<<<<<<< Updated upstream
             new Claim(ClaimTypes.NameIdentifier, userId),
+=======
+>>>>>>> Stashed changes
             new Claim(ClaimTypes.Email, email)
         };
 

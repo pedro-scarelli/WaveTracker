@@ -3,11 +3,11 @@ using LoginApi.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 
+using LoginApi.Filters;
 using System.Text;
 using DotNetEnv;
 
@@ -30,6 +30,11 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connect
 builder.Services.AddScoped<JwtService>();
 
 builder.Services.AddControllers();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ApiResponseWrapperFilter>();
+});
 
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
                    ?? throw new InvalidOperationException("JWT Key must be provided");
