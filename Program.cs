@@ -1,11 +1,13 @@
 ﻿using LoginApi.Data;
 using LoginApi.Services;
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics;
 
 using LoginApi.Filters;
 using System.Text;
@@ -28,6 +30,8 @@ var connectionString =
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<JwtService>();
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
 
@@ -59,6 +63,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exceptionHandler = context.Features.Get<IExceptionHandlerFeature>();
+        var ex = exceptionHandler?.Error;
+
+        context.Response.StatusCode = ex switch
+        {
+            BadHttpRequestException => 400,
+            _ => 500
+        };
+
+        await context.Response.WriteAsJsonAsync(new { error = ex?.Message });
+    });
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -43,7 +43,7 @@ public class ApiResponseWrapperFilter : IAsyncResultFilter
             return (null, null);
 
         var value = objResult.Value;
-        var data = value.GetType().GetProperty("Data")?.GetValue(value) ?? value;
+        var data = value.GetType().GetProperty("Data")?.GetValue(value) ?? null;
         var message = value switch
         {
             ProblemDetails problem => problem.Title,

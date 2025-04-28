@@ -6,6 +6,7 @@ using LoginApi.DTOs;
 using LoginApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 using static BCrypt.Net.BCrypt;
 
@@ -18,12 +19,13 @@ public class UserController(AppDbContext context) : ControllerBase
     [HttpPost()]
     public async Task<IActionResult> RegisterUser(RegisterUserDTO registerUserDto)
     {
+        IsEmailInUse(registerUserDto.Email);
         var hashedPassword = HashPassword(registerUserDto.Password);
         var user = new User(registerUserDto.Name, registerUserDto.Email, hashedPassword);
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return Created(string.Empty, new { id = user.Id });
+        return Created(string.Empty, new { Message = "User created", Data = new { id = user.Id } });
     }
 
     [HttpGet("{uid}")]
@@ -34,11 +36,10 @@ public class UserController(AppDbContext context) : ControllerBase
             ?? throw new UnauthorizedAccessException();
 
         IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
-        var user = await FindUserById(uid);
+        var user = await FindUserByIdOrThrow(uid);
 
         return Ok(new
         {
-            Message = "User created",
             Data = new { User = user }
         });
     }
@@ -64,7 +65,7 @@ public class UserController(AppDbContext context) : ControllerBase
 
         IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
 
-        var userToDelete = await FindUserById(uid);
+        var userToDelete = await FindUserByIdOrThrow(uid);
 
         userToDelete.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -83,7 +84,7 @@ public class UserController(AppDbContext context) : ControllerBase
             ?? throw new UnauthorizedAccessException();
 
         IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
-        var user = await FindUserById(uid);
+        var user = await FindUserByIdOrThrow(uid);
         if (updateUserDto.Name != null)
         {
             user.Name = updateUserDto.Name;
@@ -95,7 +96,16 @@ public class UserController(AppDbContext context) : ControllerBase
         });
     }
 
-    private async Task<User> FindUserById(string uid)
+    private void IsEmailInUse(string email)
+    {
+        var emailExists = _context.Users.Any(u => u.Email == email);
+        if (emailExists)
+        {
+            throw new BadHttpRequestException("E-mail already in use");
+        }
+    }
+
+    private async Task<User> FindUserByIdOrThrow(string uid)
     {
         var foundUser = await _context.Users.FindAsync(new Guid(uid));
 
