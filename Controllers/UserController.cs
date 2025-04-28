@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using static BCrypt.Net.BCrypt;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class UserController(AppDbContext context) : ControllerBase
 {
     private readonly AppDbContext _context = context;
@@ -38,6 +38,7 @@ public class UserController(AppDbContext context) : ControllerBase
 
         return Ok(new
         {
+            Message = "User created",
             Data = new { User = user }
         });
     }

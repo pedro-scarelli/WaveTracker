@@ -7,7 +7,7 @@ using static BCrypt.Net.BCrypt;
 namespace LoginApi.controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class AuthController(AppDbContext context, JwtService jwt) : ControllerBase
 {
     private readonly AppDbContext _context = context;
