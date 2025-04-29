@@ -1,6 +1,5 @@
 namespace LoginApi.DTOs;
 
 public record UpdateUserDTO(
-        string? Name,
-        string? Password
+        string? Name
         );

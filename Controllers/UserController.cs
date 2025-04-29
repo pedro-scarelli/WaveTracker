@@ -7,14 +7,17 @@ using LoginApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 
 using static BCrypt.Net.BCrypt;
 
 [ApiController]
 [Route("[controller]")]
-public class UserController(AppDbContext context) : ControllerBase
+public class UserController(AppDbContext context, IMapper mapper) : ControllerBase
 {
     private readonly AppDbContext _context = context;
+    private readonly IMapper _mapper = mapper;
 
     [HttpPost()]
     public async Task<IActionResult> RegisterUser(RegisterUserDTO registerUserDto)
@@ -48,7 +51,7 @@ public class UserController(AppDbContext context) : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetAllUser()
     {
-        var users = await _context.Users.FindAsync();
+        var users = await _context.Users.ToListAsync();
 
         return Ok(new
         {
@@ -84,11 +87,10 @@ public class UserController(AppDbContext context) : ControllerBase
             ?? throw new UnauthorizedAccessException();
 
         IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
+
         var user = await FindUserByIdOrThrow(uid);
-        if (updateUserDto.Name != null)
-        {
-            user.Name = updateUserDto.Name;
-        }
+        _mapper.Map(updateUserDto, user);
+        await _context.SaveChangesAsync();
 
         return Ok(new
         {
