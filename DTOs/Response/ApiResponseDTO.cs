@@ -1,4 +1,4 @@
-namespace LoginApi.DTOs;
+namespace LoginApi.DTOs.Response;
 
 public class ApiResponseDTO<T>
 {

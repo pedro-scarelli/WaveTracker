@@ -2,7 +2,8 @@ namespace LoginApi.controllers;
 
 using System.Security.Claims;
 using LoginApi.Data;
-using LoginApi.DTOs;
+using LoginApi.DTOs.Request;
+using LoginApi.DTOs.Response;
 using LoginApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -20,11 +21,16 @@ public class UserController(AppDbContext context, IMapper mapper) : ControllerBa
     private readonly IMapper _mapper = mapper;
 
     [HttpPost()]
-    public async Task<IActionResult> RegisterUser(RegisterUserDTO registerUserDto)
+    public async Task<IActionResult> RegisterUser(RegisterUserRequestDTO registerUserRequestDto)
     {
-        IsEmailInUse(registerUserDto.Email);
-        var hashedPassword = HashPassword(registerUserDto.Password);
-        var user = new User(registerUserDto.Name, registerUserDto.Email, hashedPassword);
+        IsEmailInUse(registerUserRequestDto.Email);
+        var hashedPassword = HashPassword(registerUserRequestDto.Password);
+        var user = new User(
+                registerUserRequestDto.Name,
+                registerUserRequestDto.Email,
+                registerUserRequestDto.Location,
+                hashedPassword
+                );
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -40,10 +46,18 @@ public class UserController(AppDbContext context, IMapper mapper) : ControllerBa
 
         IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
         var user = await FindUserByIdOrThrow(uid);
+        var userResponseDto = new UserResponseDTO(
+                user.Id.ToString(),
+                user.Name,
+                user.Email,
+                user.CreatedAt.ToString("o"),
+                user.DeletedAt?.ToString("o") ?? string.Empty,
+                user.Location
+                );
 
         return Ok(new
         {
-            Data = new { User = user }
+            Data = new { User = userResponseDto }
         });
     }
 
@@ -51,11 +65,33 @@ public class UserController(AppDbContext context, IMapper mapper) : ControllerBa
     [Authorize]
     public async Task<IActionResult> GetAllUser()
     {
-        var users = await _context.Users.ToListAsync();
+        var rawUsers = await _context.Users
+            .AsNoTracking()
+            .Select(user => new
+            {
+                user.Id,
+                user.Name,
+                user.Email,
+                user.CreatedAt,
+                user.DeletedAt,
+                user.Location
+            })
+            .ToListAsync();
+
+        var usersDtos = rawUsers.Select(user => new UserResponseDTO(
+            user.Id.ToString(),
+            user.Name,
+            user.Email,
+            user.CreatedAt.ToString("o"),
+            user.DeletedAt.HasValue
+                ? user.DeletedAt.Value.ToString("o")
+                : string.Empty,
+            user.Location
+        )).ToList();
 
         return Ok(new
         {
-            Data = new { Users = users }
+            Data = new { Users = usersDtos }
         });
     }
 
@@ -81,7 +117,7 @@ public class UserController(AppDbContext context, IMapper mapper) : ControllerBa
 
     [HttpPatch("{uid}")]
     [Authorize]
-    public async Task<IActionResult> UpdateUser(string uid, UpdateUserDTO updateUserDto)
+    public async Task<IActionResult> UpdateUser(string uid, UpdateUserRequestDTO updateUserRequestDto)
     {
         var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? throw new UnauthorizedAccessException();
@@ -89,7 +125,7 @@ public class UserController(AppDbContext context, IMapper mapper) : ControllerBa
         IsTargetUserEqualsToTokenUser(userIdFromToken, uid);
 
         var user = await FindUserByIdOrThrow(uid);
-        _mapper.Map(updateUserDto, user);
+        _mapper.Map(updateUserRequestDto, user);
         await _context.SaveChangesAsync();
 
         return Ok(new

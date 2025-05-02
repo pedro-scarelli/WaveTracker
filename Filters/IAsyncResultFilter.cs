@@ -3,7 +3,7 @@ namespace LoginApi.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-using LoginApi.DTOs;
+using LoginApi.DTOs.Response;
 
 public class ApiResponseWrapperFilter : IAsyncResultFilter
 {

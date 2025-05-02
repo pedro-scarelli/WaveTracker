@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 [Index(nameof(Email), IsUnique = true, Name = "IX_Users_Email")]
 [Table("tb_users")]
-public class User(string name, string email, string hashedPassword)
+public class User(string name, string email, string location, string hashedPassword)
 {
     [Key]
     [Column("pk_id_user", TypeName = "uuid")]
@@ -18,6 +18,9 @@ public class User(string name, string email, string hashedPassword)
     [EmailAddress]
     [Column("st_email", TypeName = "varchar(100)")]
     public string Email { get; set; } = email;
+
+    [Column("st_location", TypeName = "varchar(255)")]
+    public string Location { get; set; } = location;
 
     [Column("st_hashed_password", TypeName = "varchar(255)")]
     public string HashedPassword { get; set; } = hashedPassword;
